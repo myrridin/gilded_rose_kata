@@ -1,3 +1,5 @@
+This is my personal attempt at solving the Gilded Rose Kata - myrridin
+
 # The Gilded Rose Code Kata
 
 This is a Ruby version of the Gilded Rose Kata, found
