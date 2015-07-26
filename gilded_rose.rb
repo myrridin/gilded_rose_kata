@@ -1,48 +1,102 @@
-def update_quality(items)
-  items.each do |item|
-    if item.name != 'Aged Brie' && item.name != 'Backstage passes to a TAFKAL80ETC concert'
-      if item.quality > 0
-        if item.name != 'Sulfuras, Hand of Ragnaros'
-          item.quality -= 1
-        end
-      end
-    else
-      if item.quality < 50
-        item.quality += 1
-        if item.name == 'Backstage passes to a TAFKAL80ETC concert'
-          if item.sell_in < 11
-            if item.quality < 50
-              item.quality += 1
-            end
-          end
-          if item.sell_in < 6
-            if item.quality < 50
-              item.quality += 1
-            end
-          end
-        end
-      end
+module GildedRose
+  class Rose
+    attr_reader :sell_in, :quality
+
+    def initialize(sell_in, quality)
+      @sell_in, @quality = sell_in, quality
     end
-    if item.name != 'Sulfuras, Hand of Ragnaros'
-      item.sell_in -= 1
+
+    def age
+      @quality -= 1
+
+      if sell_in <= 0
+        @quality -= 1
+      end
+
+      if @quality < 0
+        @quality = 0
+      end
+
+      @sell_in -= 1
     end
-    if item.sell_in < 0
-      if item.name != "Aged Brie"
-        if item.name != 'Backstage passes to a TAFKAL80ETC concert'
-          if item.quality > 0
-            if item.name != 'Sulfuras, Hand of Ragnaros'
-              item.quality -= 1
-            end
-          end
+  end
+
+  class Brie < Rose
+    def age
+      @quality += 1
+
+      if sell_in <= 0
+        @quality += 1
+      end
+
+      if quality > 50
+        @quality = 50
+      end
+
+      @sell_in -= 1
+    end
+
+  end
+
+  class Backstage < Rose
+    def age
+      case
+        when sell_in > 10
+          @quality += 1
+        when sell_in <= 10 && sell_in >= 6
+          @quality += 2
+        when sell_in <= 5 && sell_in > 0
+          @quality += 3
         else
-          item.quality = item.quality - item.quality
-        end
-      else
-        if item.quality < 50
-          item.quality += 1
-        end
+          @quality = 0
       end
+
+      if quality > 50
+        @quality = 50
+      end
+
+      @sell_in -= 1
     end
+
+  end
+
+  class Sulfuras < Rose
+    def age
+    end
+  end
+
+  class Conjured < Rose
+    def age
+      @quality -= 2
+
+      if sell_in <= 0
+        @quality -= 2
+      end
+
+      if quality < 0
+        @quality = 0
+      end
+
+      @sell_in -= 1
+    end
+  end
+
+  CLASSES = {'Aged Brie' => Brie,
+             'Backstage passes to a TAFKAL80ETC concert' => Backstage,
+             'Sulfuras, Hand of Ragnaros' => Sulfuras,
+             'Conjured Mana Cake' => Conjured}
+
+  def self.for(item)
+    klass = CLASSES[item.name] || Rose
+    rose = klass.new(item.sell_in, item.quality)
+    rose.age
+    item.sell_in, item.quality = rose.sell_in, rose.quality
+  end
+end
+
+def update_quality(items)
+  items.each do |i|
+    GildedRose.for(i)
   end
 end
 
